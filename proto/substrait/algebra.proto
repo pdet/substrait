@@ -445,6 +445,8 @@ message Rel {
     HashJoinRel hash_join = 13;
     MergeJoinRel merge_join = 14;
     NestedLoopJoinRel nested_loop_join = 18;
+    MarkJoinRel mark_join = 23;
+    DelimiterJoinRel delimiter_join = 24;
     ConsistentPartitionWindowRel window = 17;
     ExchangeRel exchange = 15;
     ExpandRel expand = 16;
@@ -710,6 +712,45 @@ message NestedLoopJoinRel {
   Expression expression = 4;
 
   JoinType type = 5;
+
+  enum JoinType {
+    JOIN_TYPE_UNSPECIFIED = 0;
+    JOIN_TYPE_INNER = 1;
+    JOIN_TYPE_OUTER = 2;
+    JOIN_TYPE_LEFT = 3;
+    JOIN_TYPE_RIGHT = 4;
+    JOIN_TYPE_LEFT_SEMI = 5;
+    JOIN_TYPE_RIGHT_SEMI = 6;
+    JOIN_TYPE_LEFT_ANTI = 7;
+    JOIN_TYPE_RIGHT_ANTI = 8;
+  }
+
+  substrait.extensions.AdvancedExtension advanced_extension = 10;
+}
+
+message MarkJoinRel {
+  RelCommon common = 1;
+  Rel left = 2;
+  Rel right = 3;
+  // optional, defaults to true (a cartesian join)
+  Expression expression = 4;
+
+  substrait.extensions.AdvancedExtension advanced_extension = 10;
+}
+
+message DelimiterJoinRel {
+  RelCommon common = 1;
+  Rel left = 2;
+  Rel right = 3;
+
+  repeated Expression.FieldReference left_keys = 4;
+  repeated Expression.FieldReference right_keys = 5;
+
+  JoinType type = 6;
+
+  // A reference to the delimiter field reference computed on the
+  // input earlier during the plan.
+  Expression.FieldReference delimiter_field = 7;
 
   enum JoinType {
     JOIN_TYPE_UNSPECIFIED = 0;
