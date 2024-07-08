@@ -731,8 +731,7 @@ message NestedLoopJoinRel {
 
 message DelimiterJoinGet{
    RelCommon common = 1;
-   // This is hacky
-   repeated Expression chunk_types = 2;
+   repeated  Type  chunk_types = 2;
 }
 
 message DelimiterJoinRel {
