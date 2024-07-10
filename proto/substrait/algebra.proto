@@ -745,7 +745,7 @@ message DelimiterJoinRel {
   JoinType type = 6;
 
   // The set of columns that will be duplicate eliminated from the LHS and pushed into the RHS
-  Expression duplicate_eliminated_columns = 7;
+  repeated Expression duplicate_eliminated_columns = 7;
 
   // If this is a DelimJoin, whether it has been flipped to de-duplicating the RHS instead
   bool delim_flipped = 8;
