@@ -746,11 +746,15 @@ message DelimJoinRel {
   JoinType type = 6;
 
   // The set of columns that will be duplicate eliminated from the LHS and pushed into the RHS
-  repeated Expression duplicate_eliminated_columns = 7;
+  repeated Expression.FieldReference duplicate_eliminated_columns = 7;
 
-  // If this is a DelimJoin, whether it has been flipped to de-duplicating the RHS instead
-  bool delim_flipped = 8;
+  DelimiterSide delimiter_side = 8;
 
+  // If this is a DelimJoin, whether it has been flipped to de-duplicating the LHS or RHS
+  enum DelimiterSide {
+      LEFT = 0;
+      RIGHT = 1;
+    }
 
  enum JoinType {
     JOIN_TYPE_UNSPECIFIED = 0;
