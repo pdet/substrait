@@ -732,9 +732,7 @@ message NestedLoopJoinRel {
 
 message DelimGetRel{
    RelCommon common = 1;
-//   repeated  Type  delim_types = 2;
    ReferenceRel input = 2;
-
    repeated Expression.FieldReference column_ids = 3;
 }
 
