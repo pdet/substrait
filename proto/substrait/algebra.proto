@@ -178,6 +178,8 @@ message JoinRel {
     // This join is useful for nested sub-queries where we need exactly one record in output (or throw exception)
     // See Section 3.2 of https://15721.courses.cs.cmu.edu/spring2018/papers/16-optimizer2/hyperjoins-btw2017.pdf
     JOIN_TYPE_SINGLE = 7;
+    JOIN_TYPE_MARK = 8;
+    JOIN_TYPE_RIGHT_SEMI = 9;
   }
 
   substrait.extensions.AdvancedExtension advanced_extension = 10;
@@ -450,6 +452,8 @@ message Rel {
     HashJoinRel hash_join = 13;
     MergeJoinRel merge_join = 14;
     NestedLoopJoinRel nested_loop_join = 18;
+    DelimGetRel delim_get = 23;
+    DelimJoinRel delim_join = 24;
     ConsistentPartitionWindowRel window = 17;
     ExchangeRel exchange = 15;
     ExpandRel expand = 16;
@@ -726,6 +730,52 @@ message NestedLoopJoinRel {
     JOIN_TYPE_RIGHT_SEMI = 6;
     JOIN_TYPE_LEFT_ANTI = 7;
     JOIN_TYPE_RIGHT_ANTI = 8;
+  }
+
+  substrait.extensions.AdvancedExtension advanced_extension = 10;
+}
+
+message DelimGetRel{
+   RelCommon common = 1;
+   ReferenceRel input = 2;
+   repeated Expression.FieldReference column_ids = 3;
+}
+
+message DelimJoinRel {
+  RelCommon common = 1;
+  Rel left = 2;
+  Rel right = 3;
+
+  Expression expression = 4;
+  Expression post_join_filter = 5;
+
+  JoinType type = 6;
+
+  // The set of columns that will be duplicate eliminated from the LHS and pushed into the RHS
+  repeated Expression.FieldReference duplicate_eliminated_columns = 7;
+
+  DelimiterSide delimiter_side = 8;
+
+  // If this is a DelimJoin, whether it has been flipped to de-duplicating the LHS or RHS
+  enum DelimiterSide {
+      LEFT = 0;
+      RIGHT = 1;
+    }
+
+ enum JoinType {
+    JOIN_TYPE_UNSPECIFIED = 0;
+    JOIN_TYPE_INNER = 1;
+    JOIN_TYPE_OUTER = 2;
+    JOIN_TYPE_LEFT = 3;
+    JOIN_TYPE_RIGHT = 4;
+    JOIN_TYPE_SEMI = 5;
+    JOIN_TYPE_ANTI = 6;
+    // This join is useful for nested sub-queries where we need exactly one record in output (or throw exception)
+    // See Section 3.2 of https://15721.courses.cs.cmu.edu/spring2018/papers/16-optimizer2/hyperjoins-btw2017.pdf
+    JOIN_TYPE_SINGLE = 7;
+    JOIN_TYPE_RIGHT_SEMI = 8;
+    JOIN_TYPE_MARK = 9;
+    JOIN_TYPE_RIGHT_ANTI = 10;
   }
 
   substrait.extensions.AdvancedExtension advanced_extension = 10;
