@@ -790,7 +790,7 @@ message DuplicateEliminatedJoinRel {
   // The set of columns that will be duplicate eliminated from the LHS and pushed into the RHS
   repeated Expression.FieldReference duplicate_eliminated_columns = 7;
 
-  DuplicateEliminatedSide DuplicateEliminated_side = 8;
+  DuplicateEliminatedSide duplicate_eliminated_side = 8;
 
   // If this is a DuplicateEliminatedJoin, whether it has been flipped to de-duplicating the LHS or RHS
   enum DuplicateEliminatedSide {
