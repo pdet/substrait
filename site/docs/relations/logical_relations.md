@@ -222,15 +222,18 @@ The join operation will combine two separate inputs into a single output, based 
 
 ### Join Types
 
-| Type  | Description                                                  |
-| ----- | ------------------------------------------------------------ |
+| Type  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ----- |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Inner | Return records from the left side only if they match the right side. Return records from the right side only when they match the left side. For each cross input match, return a record including the data from both sides. Non-matching records are ignored. |
 | Outer | Return all records from both the left and right inputs. For each cross input match, return a record including the data from both sides. For any remaining non-match records, return the record from the corresponding input along with nulls for the opposite input. |
 | Left  | Return all records from the left input. For each cross input match, return a record including the data from both sides. For any remaining non-matching records from the left input, return the left record along with nulls for the right input. |
 | Right | Return all records from the right input. For each cross input match, return a record including the data from both sides. For any remaining non-matching records from the right input, return the right record along with nulls for the left input. |
-| Semi | Returns records from the left input. These are returned only if the records have a join partner on the right side. |
-| Anti  | Return records from the left input. These are returned only if the records do not have a join partner on the right side. |
-| Single | Returns one join partner per entry on the left input. If more than one join partner exists, there are two valid semantics. 1) Only the first match is returned. 2) The system throws an error. If there is no match between the left and right inputs, NULL is returned. |
+| Left Semi | Returns records from the left input. These are returned only if the records have a join partner on the right side. |
+| Right Semi | Returns records from the right input. These are returned only if the records have a join partner on the left side. |
+| Left Anti  | Return records from the left input. These are returned only if the records do not have a join partner on the right side. |
+| Right Anti  | Return records from the right input. These are returned only if the records do not have a join partner on the left side. |
+| Left Single | Return all records from the left input with no join expansion. If at least one record from the right input matches the left, return one arbitrary matching record from the right input. For any left records without matching right records, return the left record along with nulls for the right input. Similar to a left outer join but only returns one right match at most. Useful for nested sub-queries where we need exactly one record in output (or throw exception).  See Section 3.2 of https://15721.courses.cs.cmu.edu/spring2018/papers/16-optimizer2/hyperjoins-btw2017.pdf for more information. |
+| Right Single | Same as left single except that the right and left inputs are switched. |
 
 
 === "JoinRel Message"
@@ -249,7 +252,7 @@ The set operation encompasses several set-level operations that support combinin
 | Inputs               | 2 or more                                                    |
 | Outputs              | 1                                                            |
 | Property Maintenance | Maintains distribution if all inputs have the same ordinal distribution. Orderedness is not maintained. |
-| Direct Output Order  | The field order of the inputs.  All inputs must have identical fields. |
+| Direct Output Order  | The field order of the inputs. All inputs must have identical field *types*, but field nullabilities may vary. |
 
 ### Set Properties
 
@@ -261,14 +264,42 @@ The set operation encompasses several set-level operations that support combinin
 
 ### Set Operation Types
 
-| Property                | Description                                                  |
-| ----------------------- | ------------------------------------------------------------ |
-| Minus (Primary)         | Returns the primary input excluding any matching records from secondary inputs. |
-| Minus (Multiset)        | Returns the primary input minus any records that are included in all sets. |
-| Intersection (Primary)  | Returns all rows primary rows that intersect at least one secondary input. |
-| Intersection (Multiset) | Returns all rows that intersect at least one record from each secondary inputs. |
-| Union Distinct          | Returns all the records from each set, removing any rows that are duplicated (within or across sets). |
-| Union All               | Returns all records from each set, allowing duplicates.      |
+The set operation type determines both the records that are emitted and the type of the output record.
+
+| Property                | Description                                                                                                   | Output Nullability
+| ----------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Minus (Primary)         | Returns all records from the primary input excluding any matching records from secondary inputs.              | The same as the primary input.
+| Minus (Multiset)        | Returns all records from the primary input excluding any records that are included in *all* secondary inputs. | The same as the primary input.
+| Intersection (Primary)  | Returns all records from the primary input that match at least one record from *any* secondary inputs.        | If a field is nullable in the primary input and in any of the secondary inputs, it is nullable in the output.
+| Intersection (Multiset) | Returns all records from the primary input that match at least one record from *all* secondary inputs.        | If a field is required in any of the inputs, it is required in the output.
+| Union Distinct          | Returns all the records from each set, removing any rows that are duplicated (within or across sets).         | If a field is nullable in any of the inputs, it is nullable in the output.
+| Union All               | Returns all records from each set, allowing duplicates.                                                       | If a field is nullable in any of the inputs, it is nullable in the output. |
+
+Note that for set operations, NULL matches NULL. That is
+```
+{NULL, 1, 3} MINUS          {NULL, 2, 4} === (1), (3)
+{NULL, 1, 3} INTERSECTION   {NULL, 2, 3} === (NULL)
+{NULL, 1, 3} UNION DISTINCT {NULL, 2, 4} === (NULL), (1), (2), (3), (4)
+```
+
+#### Output Type Derivation Examples
+Given the following inputs, where R is Required and N is Nullable:
+```
+Input 1: (R, R, R, R, N, N, N, N)  Primary Input
+Input 2: (R, R, N, N, R, R, N, N)  Secondary Input
+Input 3: (R, N, R, N, R, N, R, N)  Secondary Input
+```
+
+The output type is as follows for the various operations
+
+| Property                | Output Type
+| ----------------------- | -----------------------------------------------------------------------------------------------------
+| Minus (Primary)         | (R, R, R, R, N, N, N, N)
+| Minus (Multiset)        | (R, R, R, R, N, N, N, N)
+| Intersection (Primary)  | (R, R, R, R, R, N, N, N)
+| Intersection (Multiset) | (R, R, R, R, R, R, R, N)
+| Union Distinct          | (R, N, N, N, N, N, N, N)
+| Union All               | (R, N, N, N, N, N, N, N)
 
 
 === "SetRel Message"
@@ -288,8 +319,6 @@ The fetch operation eliminates records outside a desired window. Typically corre
 | Outputs              | 1                                       |
 | Property Maintenance | Maintains distribution and orderedness. |
 | Direct Output Order  | Unchanged from input.                   |
-
-
 
 ### Fetch Properties
 

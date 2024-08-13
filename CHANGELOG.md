@@ -1,6 +1,89 @@
 Release Notes
 ---
 
+## [0.54.0](https://github.com/substrait-io/substrait/compare/v0.53.0...v0.54.0) (2024-08-11)
+
+### ⚠ BREAKING CHANGES
+
+* The encoding of IntervalDay literals has changed in a
+strictly backwards incompatible way. However, the logical meaning across
+encoding is maintained using a oneof. Moving a field into a oneof makes
+unset/set to zero unclear with older messages but the fields are defined
+such that the logical meaning of the two is indistinct. If neither
+microseconds nor precision is set, the value can be considered a
+precision 6 value. If you aren't using IntervalDay type, you will not
+need to make any changes.
+* TypeExpression and Parameterized type protobufs (used
+to serialize output derivation) are updated to match the now compound
+nature of IntervalDay. If you use protobuf to serialize output
+derivation that refer to IntervalDay type, you will need to rework that
+logic.
+* JoinRel's type enum now has LEFT_SINGLE
+instead of SINGLE.  Similarly there is now LEFT_ANTI and LEFT_SEMI.
+Other values are available in all join type enums. This affects JSON and
+text formats only (binary plans -- the interoperable part of Substrait --
+will still be compatible before and after this change).
+
+### Features
+
+* add arithmetic function "power" with decimal type ([#660](https://github.com/substrait-io/substrait/issues/660)) ([9af2d66](https://github.com/substrait-io/substrait/commit/9af2d66addc30ef49ed8b570a2bf9c2e1c21bad2))
+* add CSV (text) file support ([#646](https://github.com/substrait-io/substrait/issues/646)) ([5d49e04](https://github.com/substrait-io/substrait/commit/5d49e04325fcdd7c9632bda9e869a71a9d8fa8dc))
+* add precision to IntervalDay and new IntervalCompound type ([#665](https://github.com/substrait-io/substrait/issues/665)) ([e41eff2](https://github.com/substrait-io/substrait/commit/e41eff2cfed5ae6f20d0fde9b6b86da91f9d6542)), closes [#664](https://github.com/substrait-io/substrait/issues/664)
+* normalize the join types ([#662](https://github.com/substrait-io/substrait/issues/662)) ([bed84ec](https://github.com/substrait-io/substrait/commit/bed84ecb6193c22bf2ff83dc3a391ec5a9a3aa68))
+
+## [0.53.0](https://github.com/substrait-io/substrait/compare/v0.52.0...v0.53.0) (2024-08-04)
+
+### ⚠ BREAKING CHANGES
+
+* PrecisionTimestamp(Tz) literal's value is now int64
+instead of uint64
+
+### Features
+
+* add aggregate count functions with decimal return type ([#670](https://github.com/substrait-io/substrait/issues/670)) ([2aa516b](https://github.com/substrait-io/substrait/commit/2aa516bff3b2cc3e5ad262152c98f1d9b15c6765))
+* add arithmetic function "sqrt" and "factorial" with decimal type ([#674](https://github.com/substrait-io/substrait/issues/674)) ([e4f5b68](https://github.com/substrait-io/substrait/commit/e4f5b68981953d3546835572ce566e9586d497be))
+* add arithmetic function for bitwise(AND/OR/XOR) operation with decimal arguments ([#675](https://github.com/substrait-io/substrait/issues/675)) ([a70cf72](https://github.com/substrait-io/substrait/commit/a70cf72425c3a0eed432238c2a8afedab1cc025b))
+* add logarithmic functions with decimal type args ([#669](https://github.com/substrait-io/substrait/issues/669)) ([d9fb1e3](https://github.com/substrait-io/substrait/commit/d9fb1e355e0b378e1b6460f256d724a3aae931d3))
+* add precision timestamp datetime fn variants ([#666](https://github.com/substrait-io/substrait/issues/666)) ([60c93d2](https://github.com/substrait-io/substrait/commit/60c93d28c8e4df3174ba6b3f687a30d256acdcae))
+* clarify the meaning of plans ([#616](https://github.com/substrait-io/substrait/issues/616)) ([c1553df](https://github.com/substrait-io/substrait/commit/c1553dfafa09de1b2441cdb1d22a251a675419a7)), closes [#612](https://github.com/substrait-io/substrait/issues/612) [#613](https://github.com/substrait-io/substrait/issues/613)
+
+### Bug Fixes
+
+* use int64 instead of uint64 for PrecisionTimestamp(Tz) literal value ([#668](https://github.com/substrait-io/substrait/issues/668)) ([da3c74e](https://github.com/substrait-io/substrait/commit/da3c74eccc4978bdaeca4760e98a77aff560e19b))
+
+## [0.52.0](https://github.com/substrait-io/substrait/compare/v0.51.0...v0.52.0) (2024-07-14)
+
+### ⚠ BREAKING CHANGES
+
+* changes the message type for Literal PrecisionTimestamp
+and PrecisionTimestampTZ
+
+The PrecisionTimestamp and PrecisionTimestampTZ literals were introduced
+
+### Bug Fixes
+
+* include precision information in PrecisionTimestamp and PrecisionTimestampTZ literals ([#659](https://github.com/substrait-io/substrait/issues/659)) ([f9e5f9c](https://github.com/substrait-io/substrait/commit/f9e5f9c515d4b8be079bc7d9dfcd89a6fa5e6c7e)), closes [#594](https://github.com/substrait-io/substrait/issues/594) [/github.com/substrait-io/substrait/pull/594#discussion_r1471844566](https://github.com/substrait-io//github.com/substrait-io/substrait/pull/594/issues/discussion_r1471844566)
+
+## [0.51.0](https://github.com/substrait-io/substrait/compare/v0.50.0...v0.51.0) (2024-07-07)
+
+### Features
+
+* add "initcap" function ([#656](https://github.com/substrait-io/substrait/issues/656)) ([95bc6ba](https://github.com/substrait-io/substrait/commit/95bc6ba0ca5056274ccc81608919de22032084ad)), closes [/github.com/Blizzara/substrait/blob/70d1eb71623ca0754157dd5d87348bae51d420c4/extensions/functions_string.yaml#L1023](https://github.com/substrait-io//github.com/Blizzara/substrait/blob/70d1eb71623ca0754157dd5d87348bae51d420c4/extensions/functions_string.yaml/issues/L1023)
+* add null input handling options for `any_value` ([#652](https://github.com/substrait-io/substrait/issues/652)) ([1890e6a](https://github.com/substrait-io/substrait/commit/1890e6a7814c5161f38a31aba3e284dde1bc79d4))
+* allow naming/aliasing relations ([#649](https://github.com/substrait-io/substrait/issues/649)) ([4cf8108](https://github.com/substrait-io/substrait/commit/4cf8108e0746bbe6d6cf5ea95a6a5276580e0dde)), closes [#648](https://github.com/substrait-io/substrait/issues/648) [#571](https://github.com/substrait-io/substrait/issues/571)
+* define SetRel output nullability derivation ([#558](https://github.com/substrait-io/substrait/issues/558)) ([#654](https://github.com/substrait-io/substrait/issues/654)) ([612123a](https://github.com/substrait-io/substrait/commit/612123a4a84cf9554e0b8f92671ea5159c6deb21))
+
+## [0.50.0](https://github.com/substrait-io/substrait/compare/v0.49.0...v0.50.0) (2024-06-30)
+
+### ⚠ BREAKING CHANGES
+
+* consumers must now check for multiple optimization
+messages within an AdvancedExtension
+
+### Features
+
+* make optimization a repeated field ([#653](https://github.com/substrait-io/substrait/issues/653)) ([e523d5d](https://github.com/substrait-io/substrait/commit/e523d5d9fa25cf432bd07cd418a3d7f829f01037))
+
 ## [0.49.0](https://github.com/substrait-io/substrait/compare/v0.48.0...v0.49.0) (2024-05-23)
 
 
