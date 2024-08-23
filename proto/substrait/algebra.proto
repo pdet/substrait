@@ -775,10 +775,10 @@ message NestedLoopJoinRel {
   substrait.extensions.AdvancedExtension advanced_extension = 10;
 }
 
-message DuplicateEliminatedGetRel{
-   RelCommon common = 1;
-   ReferenceRel input = 2;
-   repeated Expression.FieldReference column_ids = 3;
+message DuplicateEliminatedGetRel {
+  RelCommon common = 1;
+  ReferenceRel input = 2;
+  repeated Expression.FieldReference column_ids = 3;
 }
 
 message DuplicateEliminatedJoinRel {
@@ -798,12 +798,12 @@ message DuplicateEliminatedJoinRel {
 
   // If this is a DuplicateEliminatedJoin, whether it has been flipped to de-duplicating the LHS or RHS
   enum DuplicateEliminatedSide {
-      DUPLICATE_ELIMINATED_SIDE_UNSPECIFIED = 0;
-      DUPLICATE_ELIMINATED_SIDE_LEFT = 1;
-      DUPLICATE_ELIMINATED_SIDE_RIGHT = 2;
-    }
+    DUPLICATE_ELIMINATED_SIDE_UNSPECIFIED = 0;
+    DUPLICATE_ELIMINATED_SIDE_LEFT = 1;
+    DUPLICATE_ELIMINATED_SIDE_RIGHT = 2;
+  }
 
- enum JoinType {
+  enum JoinType {
     JOIN_TYPE_UNSPECIFIED = 0;
     JOIN_TYPE_INNER = 1;
     JOIN_TYPE_OUTER = 2;
@@ -815,7 +815,8 @@ message DuplicateEliminatedJoinRel {
     JOIN_TYPE_RIGHT_SEMI = 8;
     JOIN_TYPE_RIGHT_ANTI = 9;
     JOIN_TYPE_RIGHT_SINGLE = 10;
-    JOIN_TYPE_MARK = 11;
+    JOIN_TYPE_LEFT_MARK = 11;
+    JOIN_TYPE_RIGHT_MARK = 12;
   }
 
   substrait.extensions.AdvancedExtension advanced_extension = 10;
